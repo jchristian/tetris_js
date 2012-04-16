@@ -1,0 +1,52 @@
+body {
+	font-family: Arial, "Calibri", "Times New Roman";
+}
+
+h2 {
+	font-size: 24pt;
+}
+
+h3 {
+	font-size: 16pt;
+	margin: 0 0 10px 0;
+	text-decoration: underline;
+}
+
+.content {
+	padding-left:50px;
+}
+
+#gameBoard {
+	float: left;
+}
+
+#gameBoard table {
+	border: 1px solid black;
+}
+
+#gameBoard table tbody tr td {
+	height: 25px;
+	width: 25px;
+}
+
+#score {
+	float: left;
+	margin-left: 20px;
+}
+
+#score div span {
+	display: block;
+	float: left;
+	margin-bottom: 10px;
+	padding: 5px;
+	width: 60px;
+}
+
+#score div .score {
+	background: #F0F0F0;
+	display:block;
+	float:left;
+	margin-bottom: 5px;
+	padding: 5px;
+	width: 40px;
+}
