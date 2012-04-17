@@ -29,7 +29,7 @@ h3 {
 	width: 25px;
 }
 
-#score {
+.sidePanel {
 	float: left;
 	margin-left: 20px;
 }
@@ -44,9 +44,19 @@ h3 {
 
 #score div .score {
 	background: #F0F0F0;
-	display:block;
-	float:left;
+	display: block;
+	float: left;
 	margin-bottom: 5px;
 	padding: 5px;
 	width: 40px;
+}
+
+#preview {
+	clear: left;
+	padding-top: 10px;
+}
+
+#controls {
+	clear: both;
+	padding: 10px 0 0 0;
 }

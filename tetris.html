@@ -2,6 +2,7 @@
 	<head>
 		<title>Tetris</title>
 		<link rel="stylesheet" href="styles/main.css" type="text/css" />
+		<script src="scripts/game.js" async type="text/javascript"></script>
 	</head>
 	
 	<body>
@@ -33,18 +34,27 @@
 					</tbody>
 				</table>
 			</div>
-			<div id="score">
-				<h3>Score</h3>
-				<div>
-					<span>Points</span>
-					<span class="score">1000</span>
+			<div class="sidePanel">
+				<div id="score">
+					<h3>Score</h3>
+					<div>
+						<span>Points</span>
+						<span class="score">1000</span>
+					</div>
+					<div>
+						<span>Lines</span>
+						<span class="score">50</span>
+					</div>
 				</div>
-				<div>
-					<span>Lines</span>
-					<span class="score">50</span>
+				<div id="preview">
+					<h3>Next</h3>
+					<div></div>
 				</div>
 			</div>
-
+			<div id="controls">
+				<button id="playButton">Play</button>
+				<button id="pauseButton">Pause</button>
+			</div>
 		</div>
 	</body>
 </html>
