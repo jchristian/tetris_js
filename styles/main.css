@@ -12,6 +12,22 @@ h3 {
 	text-decoration: underline;
 }
 
+table {
+	border-spacing:0;
+}
+
+td, tr, table {
+	padding:0 0 0 0;
+	margin:0 0 0 0;
+}
+
+.empty {
+	background-color:#D0D0D0;
+}
+.line {
+	background-color:#264581;
+}
+
 .content {
 	padding-left:50px;
 }
