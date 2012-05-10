@@ -103,15 +103,42 @@ Board.prototype.getUnits = function() {
 		return lineUnits;
 	}).reduce(function(first, second) { return first.concat(second); });
 }
+Board.prototype.addPiece = function(piece) {
+	var board = this;
+	piece.getUnits().forEach(function(unit) { board.units[unit.point.y][unit.point.x] = unit })
+}
+Board.prototype.clearLines = function() {
+	var board = this;
+	var completedLines = this.units.filter(function(line) { return line.every(function(unit) { return !unit.isEmpty() }) });
+	completedLines.forEach(function(line) { board.removeLine(line); });
+}
+Board.prototype.removeLine = function(line) {
+	var board = this;
+	var lineIndex = this.units.indexOf(line);
+
+	this.units.reverse().slice(lineIndex+1).forEach(function(lineToMoveDown) { board.moveLineDown(lineToMoveDown) });
+}
+Board.prototype.moveLineDown = function(line) {
+	var lineIndex = this.units.indexOf(line);
+
+	for(var i=lineIndex; i>=0; i--) {
+		for(var j=0; j<this.units[i].length; j++) {
+			this.units[i][j] = this.units[i-1][j];
+		}
+	}
+}
 
 //Game
-function Game(board, hitDetector) {
+function Game(board, hitDetector, pieceGenerator) {
 	this.startingPoint = new Point(3, 0);
 	this.board = board;
 	this.hitDetector = hitDetector;
-	this.pieceInPlay = new LinePiece(this.startingPoint);
+	this.pieceGenerator = pieceGenerator;
+	this.pieceInPlay;
 	this.timerId;
 	this.move = function() { };
+
+	this.playNewPiece();
 }
 Game.prototype.movePieceLeft = function() {
 	this.movePiece(function(piece) { piece.moveLeft() });
@@ -120,7 +147,13 @@ Game.prototype.movePieceRight = function() {
 	this.movePiece(function(piece) { piece.moveRight() });
 }
 Game.prototype.movePieceDown = function() {
-	this.movePiece(function(piece) { piece.moveDown() });
+	if(this.hitDetector.canMove(this.pieceInPlay, this.board, function(piece) { piece.moveDown() })) {
+		this.pieceInPlay.moveDown();
+		this.move();
+	}
+	else {
+		this.settleCurrentPiece();
+	}
 }
 Game.prototype.rotatePiece = function() {
 	this.movePiece(function(piece) { piece.rotate() });
@@ -131,12 +164,27 @@ Game.prototype.movePiece = function(movement) {
 		this.move();
 	}
 }
+Game.prototype.settleCurrentPiece = function() {
+	this.board.addPiece(this.pieceInPlay);
+	this.board.clearLines();
+	this.playNewPiece();
+}
+Game.prototype.playNewPiece = function() {
+	this.pieceInPlay = this.pieceGenerator.pop();
+	this.pieceInPlay.move(this.startingPoint);
+}
 Game.prototype.play = function(window) {
 	var $this = this;
 	this.timerId = window.setInterval(function() { $this.movePieceDown() }, 500);
 }
 Game.prototype.pause = function(window) {
 	window.clearInterval(this.timerId);
+}
+
+//PieceGenerator
+function PieceGenerator() {}
+PieceGenerator.prototype.pop = function() {
+	return new LinePiece();
 }
 
 //HitDetector
@@ -160,7 +208,7 @@ HitDetector.prototype.isInBounds = function(piece, board) {
 	});
 }
 
-//BoardRenderer
+//Renderers
 function GameRenderer(game, unitRenderers) {
 	this.unitRenderers = unitRenderers;
 	this.game = game;
@@ -197,7 +245,8 @@ GenericUnitRenderer.prototype.render = function(unit) {
 
 //Initialization
 var board = new Board(10, 20);
-var game = new Game(board, new HitDetector());
+var pieceGenerator = new PieceGenerator();
+var game = new Game(board, new HitDetector(), pieceGenerator);
 var inputController = new InputController(game);
 var renderer = new GameRenderer(game, [new GenericUnitRenderer(function(unit) { return unit.isEmpty() }, "empty"), new GenericUnitRenderer(function(unit) { return !unit.isEmpty() }, "line")]);
 game.move = function() { renderer.render() };
