@@ -109,22 +109,33 @@ Board.prototype.addPiece = function(piece) {
 }
 Board.prototype.clearLines = function() {
 	var board = this;
-	var completedLines = this.units.filter(function(line) { return line.every(function(unit) { return !unit.isEmpty() }) });
-	completedLines.forEach(function(line) { board.removeLine(line); });
+	while(this.hasCompletedLine()) {
+		this.removeLine(this.getCompletedLine());
+	}
+}
+Board.prototype.hasCompletedLine = function() {
+	return this.units.some(function(line) { return line.every(function(unit) { return !unit.isEmpty() }) });
+}
+Board.prototype.getCompletedLine = function() {
+	return this.units.filter(function(line) { return line.every(function(unit) { return !unit.isEmpty() }) })[0];
 }
 Board.prototype.removeLine = function(line) {
 	var board = this;
 	var lineIndex = this.units.indexOf(line);
 
-	this.units.reverse().slice(lineIndex+1).forEach(function(lineToMoveDown) { board.moveLineDown(lineToMoveDown) });
+	for(var i=lineIndex; i>=1; i--) {
+		this.moveLineDown(this.units[i]);
+	}
+
+	for(var i=0; i<this.units[0].length; i++) {
+		this.units[0][j] = new EmptyUnit();
+	}
 }
 Board.prototype.moveLineDown = function(line) {
 	var lineIndex = this.units.indexOf(line);
 
-	for(var i=lineIndex; i>=0; i--) {
-		for(var j=0; j<this.units[i].length; j++) {
-			this.units[i][j] = this.units[i-1][j];
-		}
+	for(var j=0; j<this.units[lineIndex].length; j++) {
+		this.units[lineIndex][j] = this.units[lineIndex-1][j];
 	}
 }
 
