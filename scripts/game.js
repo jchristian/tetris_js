@@ -1,7 +1,3 @@
-(function () {
-   "use strict";
-}());
-
 function Range(start, end) {
 	var array = [];
 	var index = 0;
@@ -36,7 +32,10 @@ InputController.prototype.pause = function(window) {
 };
 
 //Pieces
-function Piece(startingPoint) {
+function Piece(representations) {
+	this.point = new Point(0, 0);
+	this.representations = representations;
+	this.timesRotated = 0;
 }
 Piece.prototype.moveLeft = function() {
 	this.point = new Point(this.point.x - 1, this.point.y);
@@ -62,60 +61,27 @@ Piece.prototype.getUnits = function() {
 		return unit;
 	});
 };
-
-function LinePiece(startingPoint) {
-	this.point = startingPoint;
-	this.representations = [[new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(0, 3)],
-							[new Point(0, 0), new Point(1, 0), new Point(2, 0), new Point(3, 0)]];
-	this.timesRotated = 0;
-}
-LinePiece.prototype = Piece.prototype;
-
-function LDogPiece(startingPoint) {
-	this.point = startingPoint;
-	this.representations = [[new Point(0, 1), new Point(1, 1), new Point(1, 0), new Point(2, 0)],
-							[new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(1, 2)]];
-	this.timesRotated = 0;
-}
-LDogPiece.prototype = Piece.prototype;
-
-function RDogPiece(startingPoint) {
-	this.point = startingPoint;
-	this.representations = [[new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(2, 1)],
-							[new Point(1, 0), new Point(1, 1), new Point(0, 1), new Point(0, 2)]];
-	this.timesRotated = 0;
-}
-RDogPiece.prototype = Piece.prototype;
-
-function JPiece(startingPoint) {
-	this.point = startingPoint;
-	this.representations = [[new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(0, 2)],
-							[new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(2, 1)],
-							[new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 0)],
-							[new Point(0, 0), new Point(1, 0), new Point(2, 0), new Point(2, 1)]];
-	this.timesRotated = 0;
-}
-JPiece.prototype = Piece.prototype;
-
-function LPiece(startingPoint) {
-	this.point = startingPoint;
-	this.representations = [[new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 2)],
-							[new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(2, 0)],
-							[new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(1, 2)],
-							[new Point(0, 1), new Point(0, 0), new Point(1, 0), new Point(2, 0)]];
-	this.timesRotated = 0;
-}
-LPiece.prototype = Piece.prototype;
-
-function TetrisPiece(startingPoint) {
-	this.point = startingPoint;
-	this.representations = [[new Point(0, 1), new Point(1, 1), new Point(1, 0), new Point(2, 1)],
-							[new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 1)],
-							[new Point(0, 0), new Point(1, 0), new Point(2, 0), new Point(1, 1)],
-							[new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(0, 1)]];
-	this.timesRotated = 0;
-}
-TetrisPiece.prototype = Piece.prototype;
+Piece.representations = [
+	[[new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(0, 3)],
+     [new Point(0, 0), new Point(1, 0), new Point(2, 0), new Point(3, 0)]],
+ 	[[new Point(0, 1), new Point(1, 1), new Point(1, 0), new Point(2, 0)],
+	 [new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(1, 2)]],
+ 	[[new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(2, 1)],
+	 [new Point(1, 0), new Point(1, 1), new Point(0, 1), new Point(0, 2)]],
+	[[new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(0, 2)],
+	 [new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(2, 1)],
+	 [new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 0)],
+	 [new Point(0, 0), new Point(1, 0), new Point(2, 0), new Point(2, 1)]],
+	[[new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 2)],
+	 [new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(2, 0)],
+	 [new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(1, 2)],
+	 [new Point(0, 1), new Point(0, 0), new Point(1, 0), new Point(2, 0)]],
+	[[new Point(0, 1), new Point(1, 1), new Point(1, 0), new Point(2, 1)],
+	 [new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 1)],
+	 [new Point(0, 0), new Point(1, 0), new Point(2, 0), new Point(1, 1)],
+	 [new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(0, 1)]],
+ 	[[new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1)]]
+];
 
 //Point
 function Point(x, y) {
@@ -163,10 +129,14 @@ Board.prototype.addPiece = function(piece) {
 	piece.getUnits().forEach(function(unit) { board.units[unit.point.y][unit.point.x] = unit; });
 };
 Board.prototype.clearRows = function() {
+	var rowsCleared = 0;
 	var board = this;
 	while(this.hasCompletedRow()) {
 		this.removeRow(this.getCompletedRow());
+		rowsCleared++;
 	}
+
+	return rowsCleared;
 };
 Board.prototype.hasCompletedRow = function() {
 	return this.units.some(function(line) { return line.every(function(unit) { return !unit.isEmpty(); }); });
@@ -195,11 +165,12 @@ Board.prototype.moveRowDown = function(line) {
 };
 
 //Game
-function Game(board, hitDetector, pieceGenerator) {
-	this.startingPoint = new Point(3, 0);
+function Game(board, hitDetector, pieceGenerator, scorekeeper) {
+	this.startingPoint = new Point(4, -3);
 	this.board = board;
 	this.hitDetector = hitDetector;
 	this.pieceGenerator = pieceGenerator;
+	this.scorekeeper = scorekeeper;
 	this.move = function() { };
 
 	this.playNewPiece();
@@ -230,32 +201,29 @@ Game.prototype.movePiece = function(movement) {
 };
 Game.prototype.settleCurrentPiece = function() {
 	this.board.addPiece(this.pieceInPlay);
-	this.board.clearRows();
+	var rowsCleared = this.board.clearRows();
+	this.scorekeeper.updateScoreFor(rowsCleared);
 	this.playNewPiece();
 };
 Game.prototype.playNewPiece = function() {
 	this.pieceInPlay = this.pieceGenerator.pop();
 	this.pieceInPlay.move(this.startingPoint);
 };
-Game.prototype.play = function(window) {
-	var $this = this;
-	this.timerId = window.setInterval(function() { $this.movePieceDown(); }, 500);
+Game.prototype.play = function(theWindow) {
+	if(this.timerId === undefined) {
+		var $this = this;
+		this.timerId = theWindow.setInterval(function() { $this.movePieceDown(); }, 500);	
+	}
 };
-Game.prototype.pause = function(window) {
-	window.clearInterval(this.timerId);
+Game.prototype.pause = function(theWindow) {
+	theWindow.clearInterval(this.timerId);
+	this.timerId = undefined;
 };
 
 //PieceGenerator
 function PieceGenerator() {}
 PieceGenerator.prototype.pop = function() {
-	var pieceGenerators = [function() { return new LinePiece(); },
-						   function() { return new LDogPiece(); },
-						   function() { return new RDogPiece(); },
-						   function() { return new JPiece(); },
-						   function() { return new LPiece(); },
-						   function() { return new TetrisPiece(); }];
-	
-	return pieceGenerators[Math.floor(Math.random()*pieceGenerators.length)%pieceGenerators.length]();
+	return new Piece(Piece.representations[Math.floor(Math.random()*Piece.representations.length)%Piece.representations.length]);
 };
 
 //HitDetector
@@ -277,6 +245,21 @@ HitDetector.prototype.isInBounds = function(piece, board) {
 	return piece.getUnits().every(function(pieceUnit) {
 		return pieceUnit.point.x < board.width && pieceUnit.point.x >= 0 && pieceUnit.point.y < board.height;
 	});
+};
+
+function Scorekeeper() {
+	this.rowsCleared = 0;
+	this.score = 0;
+	this.scoringAlgorithm = function(numberOfRowsCleared, level) {
+		return numberOfRowsCleared !== 0 ? Math.pow(2, numberOfRowsCleared-1) * level * 97 : 0;
+	};
+}
+Scorekeeper.prototype.updateScoreFor = function(numberOfRowsCleared) {
+	this.rowsCleared += numberOfRowsCleared;
+	this.score += this.scoringAlgorithm(numberOfRowsCleared, this.getLevel());
+};
+Scorekeeper.prototype.getLevel = function() {
+	return Math.ceil(this.rowsCleared / 10);
 };
 
 //Renderers
@@ -317,15 +300,16 @@ GenericUnitRenderer.prototype.render = function(unit) {
 //Initialization
 var board = new Board(10, 20);
 var pieceGenerator = new PieceGenerator();
-var game = new Game(board, new HitDetector(), pieceGenerator);
+var scorekeeper = new Scorekeeper();
+var game = new Game(board, new HitDetector(), pieceGenerator, scorekeeper);
 var inputController = new InputController(game);
 var renderer = new GameRenderer(game, [new GenericUnitRenderer(function(unit) { return unit.isEmpty(); }, "empty"), new GenericUnitRenderer(function(unit) { return !unit.isEmpty(); }, "line")]);
 game.move = function() { renderer.render(); };
 
 var playButton = document.getElementById('playButton');
 var pauseButton = document.getElementById('pauseButton');
-var window = this;
+var theWindow = this;
 
-playButton.addEventListener('click', function() { inputController.play(window); });
-pauseButton.addEventListener('click', function() { inputController.pause(window); });
+playButton.addEventListener('click', function() { inputController.play(theWindow); });
+pauseButton.addEventListener('click', function() { inputController.pause(theWindow); });
 document.addEventListener('keydown', inputController.handleKeyPress.bind(inputController));
