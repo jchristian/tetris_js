@@ -190,13 +190,18 @@ Board.prototype.moveRowDown = function(line) {
 };
 
 //Game
-function Game(board, hitDetector, pieceGenerator, scorekeeper) {
+function Game(board, hitDetector, pieceGenerator, scorekeeper, clock) {
 	this.startingPoint = new Point(4, -3);
 	this.board = board;
 	this.hitDetector = hitDetector;
 	this.pieceGenerator = pieceGenerator;
 	this.scorekeeper = scorekeeper;
-	this.move = function() {};
+    this.clock = clock;
+	
+    this.move = function() {};
+
+    var game = this;
+    this.clock.tick = function() { game.movePieceDown(); };
 
 	this.playNewPiece();
 }
@@ -236,14 +241,10 @@ Game.prototype.playNewPiece = function() {
 	this.pieceInPlay.move(this.startingPoint);
 };
 Game.prototype.play = function(theWindow) {
-	if (this.timerId === undefined) {
-		var $this = this;
-		this.timerId = theWindow.setInterval(function() { $this.movePieceDown(); }, 500);
-	}
+	this.clock.start();
 };
 Game.prototype.pause = function(theWindow) {
-	theWindow.clearInterval(this.timerId);
-	this.timerId = undefined;
+    this.clock.stop();
 };
 
 //PieceGenerator
@@ -275,13 +276,18 @@ HitDetector.prototype.isInBounds = function(piece, board) {
 function Scorekeeper() {
 	this.rowsCleared = 0;
 	this.score = 0;
+    this.leveledUp = function() { };
 	this.scoringAlgorithm = function(numberOfRowsCleared, level) {
 		return numberOfRowsCleared !== 0 ? Math.floor(Math.pow(2, numberOfRowsCleared - 1) * Math.log(this.rowsCleared+1) * 100) : 0;
 	};
 }
 Scorekeeper.prototype.updateScoreFor = function(numberOfRowsCleared) {
+    var previousLevel = this.getLevel();
 	this.rowsCleared += numberOfRowsCleared;
 	this.score += this.scoringAlgorithm(numberOfRowsCleared, this.rowsCleared);
+
+    if(previousLevel < this.getLevel())
+        this.leveledUp();
 };
 Scorekeeper.prototype.getLevel = function() {
 	return Math.ceil(this.rowsCleared / 10);
@@ -334,16 +340,45 @@ ScoreRenderer.prototype.render = function(scorekeeper) {
     $('#Lines').text(scorekeeper.rowsCleared);
 };
 
+//Clock
+function Clock(window) {
+	this.window = window;
+	this.currentSpeed = 1000;
+	this.tick = function() { };
+}
+Clock.prototype.speedup = function() {
+	this.currentSpeed /= 1.15;
+	this.restart(this.currentSpeed);
+};
+Clock.prototype.restart = function() {
+	this.window.clearInterval(this.timerId);
+	var $this = this;
+	this.timerId = this.window.setInterval(function() { $this.tick(); }, this.currentSpeed);
+};
+Clock.prototype.start = function() {
+	if (this.timerId === undefined) {
+		var $this = this;
+		this.timerId = this.window.setInterval(function() { $this.tick(); }, this.currentSpeed);
+	}
+};
+Clock.prototype.stop = function() {
+	this.window.clearInterval(this.timerId);
+	this.timerId = undefined;
+};
+
 //Initialization
+var clock = new Clock(this);
 var board = new Board(10, 20);
 var pieceGenerator = new PieceGenerator();
 var scorekeeper = new Scorekeeper();
-var game = new Game(board, new HitDetector(), pieceGenerator, scorekeeper);
+var game = new Game(board, new HitDetector(), pieceGenerator, scorekeeper, clock);
 var inputController = new InputController(game);
 var renderer = new GameRenderer(game, [new GenericUnitRenderer(function(unit) { return unit.isEmpty(); }, "empty"),
                                        new GenericUnitRenderer(function(unit) { return !unit.isEmpty(); }, "line")]);
 var scoreRenderer = new ScoreRenderer();
+
 game.move = function() { renderer.render(); scoreRenderer.render(scorekeeper); };
+scorekeeper.leveledUp = function() { clock.speedup(); };
 
 var playButton = document.getElementById('playButton');
 var pauseButton = document.getElementById('pauseButton');
