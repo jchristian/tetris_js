@@ -8,8 +8,6 @@ function Range(start, end) {
 }
 
 //Input Controller
-
-
 function InputController(game) {
 	this.game = game;
 	this.functionMapping = {
@@ -60,36 +58,43 @@ Piece.prototype.getUnits = function() {
 };
 Piece.representations = [
 	[
+		new Point(4, -4),
 		[new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(0, 3)],
 		[new Point(0, 0), new Point(1, 0), new Point(2, 0), new Point(3, 0)]
 	],
 	[
+		new Point(4, -2),
 		[new Point(0, 1), new Point(1, 1), new Point(1, 0), new Point(2, 0)],
 		[new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(1, 2)]
 	],
 	[
+		new Point(4, -2),
 		[new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(2, 1)],
 		[new Point(1, 0), new Point(1, 1), new Point(0, 1), new Point(0, 2)]
 	],
 	[
+		new Point(4, -3),
 		[new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(0, 2)],
 		[new Point(0, 0), new Point(0, 1), new Point(1, 1), new Point(2, 1)],
 		[new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 0)],
 		[new Point(0, 0), new Point(1, 0), new Point(2, 0), new Point(2, 1)]
 	],
 	[
+		new Point(4, -3),
 		[new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 2)],
 		[new Point(0, 1), new Point(1, 1), new Point(2, 1), new Point(2, 0)],
 		[new Point(0, 0), new Point(1, 0), new Point(1, 1), new Point(1, 2)],
 		[new Point(0, 1), new Point(0, 0), new Point(1, 0), new Point(2, 0)]
 	],
 	[
+		new Point(4, -2),
 		[new Point(0, 1), new Point(1, 1), new Point(1, 0), new Point(2, 1)],
 		[new Point(0, 0), new Point(0, 1), new Point(0, 2), new Point(1, 1)],
 		[new Point(0, 0), new Point(1, 0), new Point(2, 0), new Point(1, 1)],
 		[new Point(1, 0), new Point(1, 1), new Point(1, 2), new Point(0, 1)]
 	],
 	[
+		new Point(4, -2),
 		[new Point(0, 0), new Point(0, 1), new Point(1, 0), new Point(1, 1)]
 	]
 ];
@@ -188,17 +193,24 @@ Board.prototype.moveRowDown = function(line) {
 		this.units[lineIndex + 1][i] = this.units[lineIndex][i];
 	}
 };
+Board.prototype.isPieceOffBoard = function(piece) {
+	var board = this;
+	return piece.getUnits().some(function(unit) {
+		return unit.point.x < 0 || unit.point.y < 0;
+	});
+};
 
 //Game
 function Game(board, hitDetector, pieceGenerator, scorekeeper, clock) {
-	this.startingPoint = new Point(4, -3);
 	this.board = board;
 	this.hitDetector = hitDetector;
 	this.pieceGenerator = pieceGenerator;
 	this.scorekeeper = scorekeeper;
     this.clock = clock;
+    this.isGameOver = false;
 	
     this.move = function() {};
+    this.gameOver = function() {};
 
     var game = this;
     this.clock.tick = function() { game.movePieceDown(); };
@@ -212,11 +224,13 @@ Game.prototype.movePieceRight = function() {
 	this.movePiece(function(piece) { piece.moveRight(); });
 };
 Game.prototype.movePieceDown = function() {
-	if (this.hitDetector.canMove(this.pieceInPlay, this.board, function(piece) { piece.moveDown(); })) {
-		this.pieceInPlay.moveDown();
-		this.move();
-	} else {
-		this.settleCurrentPiece();
+	if(!this.isGameOver) {
+		if (this.hitDetector.canMove(this.pieceInPlay, this.board, function(piece) { piece.moveDown(); })) {
+			this.pieceInPlay.moveDown();
+			this.move();
+		} else {
+			this.settleCurrentPiece();
+		}	
 	}
 };
 Game.prototype.rotatePiece = function() {
@@ -225,20 +239,24 @@ Game.prototype.rotatePiece = function() {
 	});
 };
 Game.prototype.movePiece = function(movement) {
-	if (this.hitDetector.canMove(this.pieceInPlay, this.board, movement)) {
+	if (!this.isGameOver && this.hitDetector.canMove(this.pieceInPlay, this.board, movement)) {
 		movement(this.pieceInPlay);
 		this.move();
 	}
 };
 Game.prototype.settleCurrentPiece = function() {
-	this.board.addPiece(this.pieceInPlay);
-	var rowsCleared = this.board.clearRows();
-	this.scorekeeper.updateScoreFor(rowsCleared);
-	this.playNewPiece();
+	if(this.board.isPieceOffBoard(this.pieceInPlay)) {
+		this.isGameOver = true;
+		this.gameOver();
+	} else {
+		this.board.addPiece(this.pieceInPlay);
+		var rowsCleared = this.board.clearRows();
+		this.scorekeeper.updateScoreFor(rowsCleared);
+		this.playNewPiece();
+	}
 };
 Game.prototype.playNewPiece = function() {
 	this.pieceInPlay = this.pieceGenerator.pop();
-	this.pieceInPlay.move(this.startingPoint);
 };
 Game.prototype.play = function(theWindow) {
 	this.clock.start();
@@ -250,7 +268,12 @@ Game.prototype.pause = function(theWindow) {
 //PieceGenerator
 function PieceGenerator() {}
 PieceGenerator.prototype.pop = function() {
-	return new Piece(Piece.representations[Math.floor(Math.random() * Piece.representations.length) % Piece.representations.length]);
+	var pieceRepresentation = Piece.representations[Math.floor(Math.random() * Piece.representations.length) % Piece.representations.length];
+	var startingPoint = pieceRepresentation.slice(0, 1)[0];
+
+	var piece = new Piece(pieceRepresentation.slice(1));
+	piece.move(startingPoint);
+	return piece;
 };
 
 //HitDetector
@@ -340,6 +363,11 @@ ScoreRenderer.prototype.render = function(scorekeeper) {
     $('#Lines').text(scorekeeper.rowsCleared);
 };
 
+function GameOverRenderer() {}
+GameOverRenderer.prototype.render = function() {
+	console.log("Game Over");
+};
+
 //Clock
 function Clock(window) {
 	this.window = window;
@@ -376,8 +404,10 @@ var inputController = new InputController(game);
 var renderer = new GameRenderer(game, [new GenericUnitRenderer(function(unit) { return unit.isEmpty(); }, "empty"),
                                        new GenericUnitRenderer(function(unit) { return !unit.isEmpty(); }, "line")]);
 var scoreRenderer = new ScoreRenderer();
+var gameOverRenderer = new GameOverRenderer();
 
 game.move = function() { renderer.render(); scoreRenderer.render(scorekeeper); };
+game.gameOver = function() { gameOverRenderer.render(); };
 scorekeeper.leveledUp = function() { clock.speedup(); };
 
 var playButton = document.getElementById('playButton');
