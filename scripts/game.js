@@ -230,7 +230,7 @@ Game.prototype.movePieceDown = function() {
 			this.move();
 		} else {
 			this.settleCurrentPiece();
-		}	
+		}
 	}
 };
 Game.prototype.rotatePiece = function() {
@@ -359,13 +359,13 @@ GenericUnitRenderer.prototype.render = function(unit) {
 
 function ScoreRenderer() { }
 ScoreRenderer.prototype.render = function(scorekeeper) {
-    $('#Points').text(scorekeeper.score);
-    $('#Lines').text(scorekeeper.rowsCleared);
+    $('#points').text(scorekeeper.score);
+    $('#lines').text(scorekeeper.rowsCleared);
 };
 
 function GameOverRenderer() {}
 GameOverRenderer.prototype.render = function() {
-	console.log("Game Over");
+	$('#gameOver').removeClass().addClass('visible');
 };
 
 //Clock

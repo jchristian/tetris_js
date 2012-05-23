@@ -76,3 +76,22 @@ td, tr, table {
 	clear: both;
 	padding: 10px 0 0 0;
 }
+
+#gameOver {
+	background-color:#E0E0E0;
+	border: solid 2px #AAA;
+	font-family: Arial, "MS Trebuchet", sans-serif;
+	font-size: 2em;
+	padding: 0px 5px;
+	position: absolute;
+	left:100px;
+	top:290px;
+}
+
+.hidden {
+	visibility: hidden;
+}
+
+.visible {
+	visibility: visible;
+}
