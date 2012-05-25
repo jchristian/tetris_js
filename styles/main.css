@@ -40,7 +40,7 @@ td, tr, table {
 	border: 1px solid black;
 }
 
-#gameBoard table tbody tr td {
+#gameBoard td {
 	height: 25px;
 	width: 25px;
 }
@@ -53,18 +53,17 @@ td, tr, table {
 #score div span {
 	display: block;
 	float: left;
-	margin-bottom: 10px;
-	padding: 5px;
-	width: 60px;
+	margin: 7px 5px 10px 5px;
+	width: 50px;
 }
 
 #score div .score {
 	background: #F0F0F0;
 	display: block;
 	float: left;
-	margin-bottom: 5px;
-	padding: 5px;
-	width: 40px;
+	margin: 5px 5px 10px 5px;
+	padding: 5px 0px 5px 5px;
+	width: 70px;
 }
 
 #preview {
