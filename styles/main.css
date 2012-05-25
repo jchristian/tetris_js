@@ -36,11 +36,11 @@ td, tr, table {
 	float: left;
 }
 
-#gameBoard table {
+table {
 	border: 1px solid black;
 }
 
-#gameBoard td {
+td {
 	height: 25px;
 	width: 25px;
 }

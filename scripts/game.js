@@ -266,14 +266,26 @@ Game.prototype.pause = function(theWindow) {
 };
 
 //PieceGenerator
-function PieceGenerator() {}
+function PieceGenerator() {
+	var $this = this;
+	this.nextPiece = function() { return $this.pop(); };
+}
 PieceGenerator.prototype.pop = function() {
 	var pieceRepresentation = Piece.representations[Math.floor(Math.random() * Piece.representations.length) % Piece.representations.length];
 	var startingPoint = pieceRepresentation.slice(0, 1)[0];
 
-	var piece = new Piece(pieceRepresentation.slice(1));
-	piece.move(startingPoint);
-	return piece;
+	var nextPiece = new Piece(pieceRepresentation.slice(1));
+	nextPiece.startingPoint = startingPoint;
+
+	var thisPiece = this.nextPiece;
+	this.nextPiece = function() { return nextPiece; };
+
+	var piece = thisPiece();
+	piece.move(piece.startingPoint);
+	return thisPiece();
+};
+PieceGenerator.prototype.peek = function() {
+	return this.nextPiece();
 };
 
 //HitDetector
@@ -344,13 +356,40 @@ GameRenderer.prototype.render = function() {
 	this.renderItem(this.game.pieceInPlay);
 };
 
-function GenericUnitRenderer(canRender, className) {
+//Renderers
+function PreviewRenderer(pieceGenerator, previewBoard, unitRenderers) {
+	this.unitRenderers = unitRenderers;
+	this.pieceGenerator = pieceGenerator;
+	this.previewBoard = previewBoard;
+}
+PreviewRenderer.prototype.renderItem = function(itemToRender) {
+	var $this = this;
+
+	itemToRender.getUnits().forEach(function(unit) {
+		var renderer = $this.unitRenderers.filter(function(renderer) {
+			return renderer.canRender(unit);
+		})[0];
+		if (renderer === undefined) throw {
+			name: "Missing Unit Renderer",
+			message: "No renderer for unit [" + unit + "]"
+		};
+
+		renderer.render(unit);
+	});
+};
+PreviewRenderer.prototype.render = function() {
+	this.renderItem(this.previewBoard);
+	this.renderItem(this.pieceGenerator.peek());
+};
+
+function GenericUnitRenderer(canRender, className, context) {
 	this.canRender = canRender;
 	this.className = className;
+	this.context = context;
 }
 GenericUnitRenderer.prototype.render = function(unit) {
 	var className = "col" + (unit.point.x + 1);
-	var cell = $("#row" + (unit.point.y + 1)).find("." + className);
+	var cell = this.context.find("#row" + (unit.point.y + 1)).find("." + className);
 
 	cell.removeClass();
 	cell.addClass(className);
@@ -401,12 +440,14 @@ var pieceGenerator = new PieceGenerator();
 var scorekeeper = new Scorekeeper();
 var game = new Game(board, new HitDetector(), pieceGenerator, scorekeeper, clock);
 var inputController = new InputController(game);
-var renderer = new GameRenderer(game, [new GenericUnitRenderer(function(unit) { return unit.isEmpty(); }, "empty"),
-                                       new GenericUnitRenderer(function(unit) { return !unit.isEmpty(); }, "line")]);
+var renderer = new GameRenderer(game, [new GenericUnitRenderer(function(unit) { return unit.isEmpty(); }, "empty", $("#gameBoard")),
+                                       new GenericUnitRenderer(function(unit) { return !unit.isEmpty(); }, "line", $("#gameBoard"))]);
+var previewRenderer = new PreviewRenderer(pieceGenerator, new Board(3, 4), [new GenericUnitRenderer(function(unit) { return unit.isEmpty(); }, "empty", $("#preview")),
+                                                                            new GenericUnitRenderer(function(unit) { return !unit.isEmpty(); }, "line", $("#preview"))]);
 var scoreRenderer = new ScoreRenderer();
 var gameOverRenderer = new GameOverRenderer();
 
-game.move = function() { renderer.render(); scoreRenderer.render(scorekeeper); };
+game.move = function() { renderer.render(); scoreRenderer.render(scorekeeper); previewRenderer.render(); };
 game.gameOver = function() { gameOverRenderer.render(); };
 scorekeeper.leveledUp = function() { clock.speedup(); };
 
